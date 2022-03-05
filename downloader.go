@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -11,9 +13,13 @@ import (
 type DownloadFile struct {
 	Filename string
 	URL      string
+	MD5      string
 }
 
-var DownloadCh = make(chan DownloadFile, *Retries*10)
+//var Verify = flag.Bool("verify", false, "Rechecks files after downloading. This should be left on unless you know what you're doing.")
+var Threads = flag.Int("threads", 5, "Amount of files to download at the same time.")
+
+var DownloadCh = make(chan DownloadFile, *Threads*10)
 var DownloadWg = sync.WaitGroup{}
 
 func init() {
@@ -29,18 +35,18 @@ func init() {
 func downloadthread() {
 	for download := range DownloadCh {
 		err := actualdownload(download)
-		if err != nil {
+		if err == nil {
 			continue
 		}
 
 		retry := 1
 		for err != nil {
-			if retry >= *Retries {
+			if retry == *Retries {
 				ModPrintf("DOWNLOAD", "%d retries exceeded while downloading %s. Failing with error: %v", *Retries, download.URL, err)
 				break
 			}
 
-			ModPrintf("DOWNLOAD", "Error while downloading %s: %v, retrying", download.URL, err)
+			ModPrintf("DOWNLOAD", "Error while downloading %s: %v, retrying (attempt %d/%d)", download.URL, err, retry, *Retries)
 			retry++
 
 			err = actualdownload(download)
@@ -69,8 +75,32 @@ func actualdownload(download DownloadFile) error {
 
 	defer res.Body.Close()
 
-	_, err = io.Copy(out, res.Body)
-	return err
+	n, err := io.Copy(out, res.Body)
+	if err != nil {
+		return err
+	}
+
+	//if !*Verify {
+	//	return nil
+	//}
+
+	if n != res.ContentLength {
+		return fmt.Errorf("content length didn't match with downloaded file size")
+	}
+
+	//out.Seek(0, 0)
+
+	//hash := md5.New()
+	//_, err = io.Copy(hash, out)
+	//if err != nil {
+	//	return err
+	//}
+
+	//if hex.EncodeToString(hash.Sum(nil)) != download.MD5 {
+	//	return fmt.Errorf("hashes didn't match")
+	//}
+
+	return nil
 }
 
 func Download(download DownloadFile) {
@@ -78,5 +108,6 @@ func Download(download DownloadFile) {
 }
 
 func WaitDownloadFinish() {
+	close(DownloadCh)
 	DownloadWg.Wait()
 }

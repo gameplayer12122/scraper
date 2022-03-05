@@ -4,17 +4,20 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"scraper/scraper"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/LunaWasFlaggedAgain/scraper/scraper"
 )
 
+var start = time.Now()
+
 var Retries = flag.Int("retries", 3, "Amount of times to retry whenever there's a error.")
-var Threads = flag.Int("threads", 20, "Amount of files to download at the same time.")
 
 var savePath = flag.String("dir", "", "The folder to save images in.")
-var tags = normalizeTagsSlice(flag.Args())
+var tags string
 var enabledSites = make(map[string]struct{})
 
 func init() {
@@ -102,6 +105,7 @@ func loop(mod scraper.Mod) {
 			Download(DownloadFile{
 				Filename: mod.Name + "_" + strconv.FormatUint(p.ID, 10) + "." + p.File.Extension,
 				URL:      p.File.URL,
+				MD5:      p.File.MD5,
 			})
 		}
 
@@ -112,6 +116,8 @@ func loop(mod scraper.Mod) {
 }
 
 func main() {
+	tags = normalizeTagsSlice(flag.Args())
+
 	wg := sync.WaitGroup{}
 
 	for _, mod := range scraper.Mods {
@@ -130,4 +136,11 @@ func main() {
 
 	fmt.Println("Waiting for downloads to finish")
 	WaitDownloadFinish()
+
+	timeStr := time.Since(start).String()
+
+	fmt.Println("")
+	fmt.Println("------------" + strings.Repeat("-", len(timeStr)))
+	fmt.Println("Finished in", timeStr)
+	fmt.Println("------------" + strings.Repeat("-", len(timeStr)))
 }
