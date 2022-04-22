@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var file *os.File
+var seenFile *os.File
 var seen = make(map[string]struct{})
 var mutex = sync.RWMutex{}
 
@@ -18,13 +18,13 @@ var mutex = sync.RWMutex{}
 func init() {
 	var err error
 
-	file, err = os.OpenFile(path.Join(*savePath, ".md5"), os.O_RDWR|os.O_CREATE, 0644)
+	seenFile, err = os.OpenFile(path.Join(*savePath, ".md5"), os.O_RDWR|os.O_CREATE, 0644)
 
 	if err != nil {
 		panic(err)
 	}
 
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(seenFile)
 
 	for scanner.Scan() {
 		seen[scanner.Text()] = struct{}{}
@@ -34,7 +34,7 @@ func init() {
 		for {
 			time.Sleep(1 * time.Second)
 
-			_, err := file.Seek(0, io.SeekStart)
+			_, err := seenFile.Seek(0, io.SeekStart)
 			if err != nil {
 				panic(err)
 			}
@@ -46,7 +46,7 @@ func init() {
 			}
 			mutex.RUnlock()
 
-			_, err = file.WriteString(keys)
+			_, err = seenFile.WriteString(keys)
 			if err != nil {
 				panic(err)
 			}
