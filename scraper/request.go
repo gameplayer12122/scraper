@@ -1,6 +1,7 @@
 package scraper
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -17,6 +18,10 @@ func Request(url string, client *http.Client) (*http.Response, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	if res.StatusCode > 299 {
+		return nil, fmt.Errorf("webserver returned %s", res.Status)
 	}
 
 	return res, nil
