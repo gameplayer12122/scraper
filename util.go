@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/url"
 	"strings"
 )
 
@@ -29,7 +30,5 @@ func normalizeTagsSlice(t []string) string {
 }
 
 func normalizeTags(t string) string {
-	t = strings.ReplaceAll(t, " ", "+")
-	t = strings.ReplaceAll(t, ":", "%3A")
-	return t
+	return url.QueryEscape(t)
 }
