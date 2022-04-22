@@ -34,6 +34,8 @@ func init() {
 
 func downloadthread() {
 	for download := range DownloadCh {
+		ModPrintf("DOWNLOAD", "Downloading %s", download.URL)
+
 		err := actualdownload(download)
 		if err == nil {
 			continue

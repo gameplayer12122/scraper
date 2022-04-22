@@ -15,17 +15,20 @@ type File struct {
 	MD5       string `json:"md5"`
 }
 
-type r34JsonPost struct { // Transformed into a Post and a File eventually
+// Transformed into a Post and a File eventually
+type r34JsonPost struct {
 	ID      uint64 `json:"id"`
 	FileURL string `json:"file_url"`
 	FileMD5 string `json:"hash"`
 }
 
-type gelBooruJsonPosts struct { // Gelbooru's API response is the samme as danbooru's response, except without extension.
+// Gelbooru's API response is the same as danbooru's response, except without extension.
+type gelBooruJsonPosts struct {
 	Posts []danBooruJsonPost `json:"post"`
 }
 
-type danBooruJsonPost struct { // Transformed into a Post and a File eventually
+// Transformed into a Post and a File eventually
+type danBooruJsonPost struct {
 	ID      uint64 `json:"id"`
 	FileExt string `json:"file_ext"`
 	FileURL string `json:"file_url"`
